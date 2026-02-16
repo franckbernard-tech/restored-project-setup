@@ -9,7 +9,7 @@ function Dashboard() {
   const [n8nStatus, setN8nStatus] = useState({ online: false, message: 'Serveur n8n hors ligne' });
 
   const RSS_URL = "https://blocktrends.fr/feed/";
-  const API_URL = "http://72.62.232.53:5678/webhook-test/veille-ia";
+  const API_URL = "https://arrangements-pubmed-combine-parent.trycloudflare.com/webhook/veille-ia";
 
   const fetchNews = async () => {
     try {
