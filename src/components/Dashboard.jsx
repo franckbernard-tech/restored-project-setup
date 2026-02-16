@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ArticleCard from './ArticleCard';
 import Status from './Status';
 
 function Dashboard() {
@@ -9,40 +8,6 @@ function Dashboard() {
   const [n8nStatus, setN8nStatus] = useState({ online: false, message: 'Serveur n8n hors ligne' });
 
   const API_URL = "https://arrangements-pubmed-combine-parent.trycloudflare.com/webhook/veille-ia";
-
-  /**
-   * Normalise la réponse n8n vers un tableau d'articles.
-   * Gère les formats :
-   *   - { top_signals: [...] }
-   *   - [{ json: { title, summary, link, ... } }]  (items n8n bruts)
-   *   - [{ title, summary, link, ... }]             (tableau direct)
-   *   - { articles: [...] }
-   */
-  const normalize = (data) => {
-    let items = [];
-
-    if (Array.isArray(data)) {
-      items = data.map((d) => d.json || d);
-    } else if (data?.top_signals) {
-      items = data.top_signals;
-    } else if (data?.json?.top_signals) {
-      items = data.json.top_signals;
-    } else if (data?.articles) {
-      items = data.articles;
-    } else {
-      return [];
-    }
-
-    return items.map((item, index) => ({
-      id: index,
-      title: item.title || 'Sans titre',
-      description: item.summary || item.description || item.content || '',
-      url: item.link || item.url || '',
-      date: item.date || '',
-      score: item.score,
-      tag: item.tag,
-    }));
-  };
 
   const syncWithWebhook = async () => {
     setLoading(true);
@@ -61,15 +26,14 @@ function Dashboard() {
       }
 
       const data = await response.json();
-      const normalized = normalize(data);
+      console.log('Données reçues:', data);
 
-      if (normalized.length > 0) {
-        setArticles(normalized);
-        localStorage.setItem('cached_articles', JSON.stringify(normalized));
-      }
+      const signals = data.top_signals || [];
+      setArticles(signals);
+      localStorage.setItem('cached_articles', JSON.stringify(signals));
 
       setIsConnected(true);
-      setN8nStatus({ online: true, message: `Connecté — ${normalized.length} signaux` });
+      setN8nStatus({ online: true, message: `Connecté — ${signals.length} signaux` });
     } catch (error) {
       console.error("Erreur Webhook:", error);
       setIsConnected(false);
@@ -115,8 +79,8 @@ function Dashboard() {
         <p style={{textAlign: 'center', color: '#9ca3af'}}>Aucune donnée. Cliquez sur Synchro n8n.</p>
       ) : (
         <div className="article-grid">
-          {articles.map((article) => (
-            <div key={article.id} className="article-card">
+          {articles.map((article, index) => (
+            <div key={index} className="article-card">
               <h2>{article.title}</h2>
               {article.score && (
                 <span style={{
@@ -144,9 +108,11 @@ function Dashboard() {
                   {article.tag}
                 </span>
               )}
-              <p style={{fontSize: '0.9em', color: '#ccc', marginTop: '8px'}}>{article.description}</p>
-              {article.url && (
-                <a href={article.url} target="_blank" rel="noopener noreferrer">LIRE →</a>
+              <p style={{fontSize: '0.9em', color: '#ccc', marginTop: '8px'}}>
+                {article.summary || article.description || ''}
+              </p>
+              {(article.link || article.url) && (
+                <a href={article.link || article.url} target="_blank" rel="noopener noreferrer">LIRE →</a>
               )}
             </div>
           ))}
