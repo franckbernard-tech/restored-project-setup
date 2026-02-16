@@ -28,12 +28,15 @@ function Dashboard() {
       const data = await response.json();
       console.log('Données reçues:', data);
 
-      const signals = data.top_signals || [];
-      setArticles(signals);
-      localStorage.setItem('cached_articles', JSON.stringify(signals));
+      const signals = Array.isArray(data) ? data[0]?.top_signals : data.top_signals;
+      if (!signals || signals.length === 0) {
+        console.warn('Attention : top_signals est vide ou mal formaté', data);
+      }
+      setArticles(signals || []);
+      localStorage.setItem('cached_articles', JSON.stringify(signals || []));
 
       setIsConnected(true);
-      setN8nStatus({ online: true, message: `Connecté — ${signals.length} signaux` });
+      setN8nStatus({ online: true, message: `Connecté — ${(signals || []).length} signaux` });
     } catch (error) {
       console.error("Erreur Webhook:", error);
       setIsConnected(false);
@@ -72,7 +75,7 @@ function Dashboard() {
           {loading ? 'Chargement...' : 'Synchro n8n 🔄'}
         </button>
       </div>
-      
+
       {loading && articles.length === 0 ? (
         <p style={{textAlign: 'center'}}>Chargement du flux neural...</p>
       ) : articles.length === 0 ? (
