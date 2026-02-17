@@ -7,7 +7,7 @@ function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
   const [n8nStatus, setN8nStatus] = useState({ online: false, message: 'Serveur n8n hors ligne' });
 
-  const API_URL = "https://api.youdohub.fr/webhook/veille-ia";
+  const API_URL = "https://n8n.youdohub.fr/webhook/veille-ia";
 
   const syncWithWebhook = async () => {
     setLoading(true);
